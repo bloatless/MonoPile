@@ -27,13 +27,23 @@ class PileFormatter extends JsonFormatter
      */
     public function format(array $record): string
     {
+        // convert datetime
         if (isset($record['datetime']) && ($record['datetime'] instanceof \DateTimeInterface)) {
             $datetimeString = $record['datetime']->format('Y-m-d H:i:s');
             $record['datetime'] = $datetimeString;
         }
 
+        // add source
         $record['source'] = $this->source;
 
-        return parent::format($record);
+        // wrap record in json-api compatible format
+        $formatted = [
+            'data' => [
+                'type' => 'log',
+                'attributes' => $record,
+            ],
+        ];
+
+        return parent::format($formatted);
     }
 }

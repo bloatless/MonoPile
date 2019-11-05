@@ -37,10 +37,51 @@ class PileHandler extends AbstractProcessingHandler
             throw new MissingExtensionException('The curl extension is needed to use the PileHandler');
         }
 
-        $this->apiUrl = (!empty($apiUrl)) ? $apiUrl : self::API_URL;
-        $this->apiKey = $apiKey;
+        $apiUrl = (!empty($apiUrl)) ? $apiUrl : self::API_URL;
+        $this->setApiUrl($apiUrl);
+        $this->setApiKey($apiKey);
 
         parent::__construct($level, $bubble);
+    }
+
+    /**
+     * Returns the API Url.
+     *
+     * @return string
+     */
+    public function getApiUrl(): string
+    {
+        return $this->apiUrl;
+    }
+
+    /**
+     * Sets the API Url.
+     *
+     * @param string $apiUrl
+     */
+    public function setApiUrl(string $apiUrl): void
+    {
+        $this->apiUrl = $apiUrl;
+    }
+
+    /**
+     * Returns the API key.
+     *
+     * @return string
+     */
+    public function getApiKey(): string
+    {
+        return $this->apiKey;
+    }
+
+    /**
+     * Sets the API key.
+     *
+     * @param string $apiKey
+     */
+    public function setApiKey(string $apiKey): void
+    {
+        $this->apiKey = $apiKey;
     }
 
     /**
@@ -50,39 +91,37 @@ class PileHandler extends AbstractProcessingHandler
      */
     protected function write(array $record): void
     {
-        $data = json_decode($record['formatted'], true);
-        $this->send($data);
+        if (empty($record['formatted'])) {
+            return;
+        }
+
+        $this->send($record['formatted']);
     }
 
     /**
      * Sends a request to the Pile API.
      *
-     * @param array $data
+     * @param string $data
      */
-    protected function send(array $data): void
+    protected function send(string $data): void
     {
-        $requestData = json_encode([
-            'data' => [
-                'type' => 'log',
-                'attributes' => $data,
-            ],
-        ]);
-
-
-        $headers = [
-            'Content-Type: application/json',
-            'X-API-Key: ' . $this->apiKey,
-        ];
-
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $this->apiUrl);
+        curl_setopt($ch, CURLOPT_URL, $this->getApiUrl());
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $requestData);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $this->getRequestHeaders());
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 1);
         curl_setopt($ch, CURLOPT_TIMEOUT, 1);
         $server_output = curl_exec($ch);
+    }
+
+    protected function getRequestHeaders(): array
+    {
+        return [
+            'Content-Type: application/json',
+            'X-API-Key: ' . $this->getApiKey(),
+        ];
     }
 
     /**

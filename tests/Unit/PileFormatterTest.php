@@ -16,17 +16,28 @@ class PileFormatterTest extends TestCase
 
     public function testFormat()
     {
-        $formatter = new PileFormatter('testsuite');
         $record = $this->getRecord(Logger::DEBUG, 'test', ['foo' => 'bar']);
-        $encodedRecord = $formatter->format($record);
-        $decodedRecord = json_decode($encodedRecord, true);
-        $expected = $record;
-        $expected['source'] = 'testsuite';
-        if (isset($expected['datetime']) && ($expected['datetime'] instanceof \DateTimeInterface)) {
-            $datetimeString = $expected['datetime']->format('Y-m-d H:i:s');
-            $expected['datetime'] = $datetimeString;
+        $expectedAttributes = $this->provideExptectedAttributes($record);
+
+        $formatter = new PileFormatter('testsuite');
+        $formattedRecordString = $formatter->format($record);
+        $formattedRecord = json_decode($formattedRecordString, true);
+
+        $this->assertArrayHasKey('data', $formattedRecord);
+        $this->assertArrayHasKey('attributes', $formattedRecord['data']);
+        $this->assertEquals('log', $formattedRecord['data']['type']);
+        $this->assertEquals($expectedAttributes, $formattedRecord['data']['attributes']);
+    }
+
+    protected function provideExptectedAttributes(array $record): array
+    {
+        $expectedAttributes = $record;
+        $expectedAttributes['source'] = 'testsuite';
+        if (isset($expectedAttributes['datetime']) && ($expectedAttributes['datetime'] instanceof \DateTimeInterface)) {
+            $datetimeString = $expectedAttributes['datetime']->format('Y-m-d H:i:s');
+            $expectedAttributes['datetime'] = $datetimeString;
         }
 
-        $this->assertEquals($expected, $decodedRecord);
+        return $expectedAttributes;
     }
 }
