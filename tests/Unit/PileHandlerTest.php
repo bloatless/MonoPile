@@ -10,26 +10,39 @@ use Monolog\Test\TestCase;
 
 class PileHandlerTest extends TestCase
 {
+    protected $apiUrl = '';
+
+    protected $apiKey = '';
+
+    protected function setUp(): void
+    {
+        $this->apiUrl = 'http://foobar.net';
+        $this->apiKey = '123123';
+    }
+
     public function testCanBeInitialized()
     {
-        $apiUrlDefault = 'https://pile.geekservice.de/api/v1/log';
-        $apiUrlCustom = 'http://foobar.net';
-        $apiKey = '31337';
-
-        // test with default API url
-        $handler = new PileHandler($apiKey);
+        $handler = new PileHandler($this->apiUrl, $this->apiKey);
         $this->assertInstanceOf(PileHandler::class, $handler);
-        $this->assertEquals($apiKey, $handler->getApiKey());
-        $this->assertEquals($apiUrlDefault, $handler->getApiUrl());
+        $this->assertEquals($this->apiKey, $handler->getApiKey());
+        $this->assertEquals($this->apiUrl, $handler->getApiUrl());
+    }
 
-        // test with custom API url
-        $handler = new PileHandler($apiKey, $apiUrlCustom);
-        $this->assertEquals($apiUrlCustom, $handler->getApiUrl());
+    public function testInitWithoutApiUrl()
+    {
+        $this->expectException('InvalidArgumentException');
+        $handler = new PileHandler('', $this->apiKey);
+    }
+
+    public function testInitWithoutApiKey()
+    {
+        $this->expectException('InvalidArgumentException');
+        $handler = new PileHandler($this->apiUrl, '');
     }
 
     public function testHandleWithBubblingAllowed()
     {
-        $handler = new PileHandlerMock('123');
+        $handler = new PileHandlerMock($this->apiUrl, $this->apiKey);
         $record = $this->getRecord(Logger::DEBUG);
         $result = $handler->handle($record);
         $this->assertFalse($result);
@@ -40,12 +53,12 @@ class PileHandlerTest extends TestCase
         $this->assertEquals(100, $dataSend['data']['data']['attributes']['level']);
         $this->assertEquals('not_provided', $dataSend['data']['data']['attributes']['source']);
         $this->assertEquals('Content-Type: application/json', $dataSend['headers'][0]);
-        $this->assertEquals('X-API-Key: 123', $dataSend['headers'][1]);
+        $this->assertEquals(sprintf('X-API-Key: %s', $this->apiKey), $dataSend['headers'][1]);
     }
 
     public function testHandleWithBubblingNotAllowed()
     {
-        $handler = new PileHandlerMock('123', '', Logger::DEBUG, false);
+        $handler = new PileHandlerMock($this->apiUrl, $this->apiKey, Logger::DEBUG, false);
         $record = $this->getRecord(Logger::DEBUG);
         $result = $handler->handle($record);
         $this->assertTrue($result);
@@ -53,7 +66,7 @@ class PileHandlerTest extends TestCase
 
     public function testHandleWithSourceProvided()
     {
-        $handler = new PileHandlerMock('123');
+        $handler = new PileHandlerMock($this->apiUrl, $this->apiKey);
         $handler->setFormatter((new PileFormatter('testsuite')));
         $record = $this->getRecord(Logger::DEBUG);
         $handler->handle($record);

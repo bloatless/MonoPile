@@ -11,8 +11,6 @@ use Monolog\Formatter\FormatterInterface;
 
 class PileHandler extends AbstractProcessingHandler
 {
-    protected const API_URL = 'https://pile.geekservice.de/api/v1/log';
-
     /**
      * @var string $apiUrl
      */
@@ -24,20 +22,25 @@ class PileHandler extends AbstractProcessingHandler
     protected $apiKey;
 
     /**
-     * @param string $apiKey
      * @param string $apiUrl
+     * @param string $apiKey
      * @param string|int $level The minimum logging level to trigger this handler
      * @param bool $bubble Whether or not messages that are handled should bubble up the stack.
      *
      * @throws MissingExtensionException If the curl extension is missing
      */
-    public function __construct(string $apiKey, string $apiUrl = '', $level = Logger::DEBUG, bool $bubble = true)
+    public function __construct(string $apiUrl, string $apiKey, $level = Logger::DEBUG, bool $bubble = true)
     {
         if (!extension_loaded('curl')) {
             throw new MissingExtensionException('The curl extension is needed to use the PileHandler');
         }
+        if (empty($apiUrl)) {
+            throw new \InvalidArgumentException('API-Url can not be empty.');
+        }
+        if (empty($apiKey)) {
+            throw new \InvalidArgumentException('API-Key can not be empty.');
+        }
 
-        $apiUrl = (!empty($apiUrl)) ? $apiUrl : self::API_URL;
         $this->setApiUrl($apiUrl);
         $this->setApiKey($apiKey);
 
