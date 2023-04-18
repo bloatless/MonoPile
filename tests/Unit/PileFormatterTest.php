@@ -3,7 +3,8 @@
 namespace Bloatless\MonoPile\Tests\Unit;
 
 use Bloatless\MonoPile\PileFormatter;
-use Monolog\Logger;
+use Monolog\Level;
+use Monolog\LogRecord;
 use Monolog\Test\TestCase;
 
 class PileFormatterTest extends TestCase
@@ -16,7 +17,7 @@ class PileFormatterTest extends TestCase
 
     public function testFormat()
     {
-        $record = $this->getRecord(Logger::DEBUG, 'test', ['foo' => 'bar']);
+        $record = $this->getRecord(Level::Debug, 'test', ['foo' => 'bar']);
         $expectedAttributes = $this->provideExptectedAttributes($record);
 
         $formatter = new PileFormatter('testsuite');
@@ -29,9 +30,9 @@ class PileFormatterTest extends TestCase
         $this->assertEquals($expectedAttributes, $formattedRecord['data']['attributes']);
     }
 
-    protected function provideExptectedAttributes(array $record): array
+    protected function provideExptectedAttributes(LogRecord $record): array
     {
-        $expectedAttributes = $record;
+        $expectedAttributes = $record->toArray();
         $expectedAttributes['source'] = 'testsuite';
         if (isset($expectedAttributes['datetime']) && ($expectedAttributes['datetime'] instanceof \DateTimeInterface)) {
             $datetimeString = $expectedAttributes['datetime']->format('Y-m-d H:i:s');

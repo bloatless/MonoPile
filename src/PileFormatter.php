@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Bloatless\MonoPile;
 
 use Monolog\Formatter\JsonFormatter;
+use Monolog\LogRecord;
 
 class PileFormatter extends JsonFormatter
 {
@@ -20,30 +21,29 @@ class PileFormatter extends JsonFormatter
     }
 
     /**
-     * Formats a record so it matches the Pile API requirements.
+     * Formats a record, so it matches the Pile API requirements.
      *
-     * @param array $record
+     * @param LogRecord $record
      * @return string
      */
-    public function format(array $record): string
+    public function format(LogRecord $record): string
     {
         // convert datetime
-        if (isset($record['datetime']) && ($record['datetime'] instanceof \DateTimeInterface)) {
-            $datetimeString = $record['datetime']->format('Y-m-d H:i:s');
-            $record['datetime'] = $datetimeString;
+        $formattedRecord = $record->toArray();
+        if (isset($formattedRecord['datetime']) && ($formattedRecord['datetime'] instanceof \DateTimeInterface)) {
+            $datetimeString = $formattedRecord['datetime']->format('Y-m-d H:i:s');
+            $formattedRecord['datetime'] = $datetimeString;
         }
 
         // add source
-        $record['source'] = $this->source;
+        $formattedRecord['source'] = $this->source;
 
         // wrap record in json-api compatible format
-        $formatted = [
+        return json_encode([
             'data' => [
                 'type' => 'log',
-                'attributes' => $record,
+                'attributes' => $formattedRecord,
             ],
-        ];
-
-        return parent::format($formatted);
+        ]);
     }
 }
