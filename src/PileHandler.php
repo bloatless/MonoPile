@@ -8,6 +8,7 @@ use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\Handler\MissingExtensionException;
 use Monolog\Logger;
 use Monolog\Formatter\FormatterInterface;
+use Monolog\LogRecord;
 
 class PileHandler extends AbstractProcessingHandler
 {
@@ -25,7 +26,7 @@ class PileHandler extends AbstractProcessingHandler
      * @param string $apiUrl
      * @param string $apiKey
      * @param string|int $level The minimum logging level to trigger this handler
-     * @param bool $bubble Whether or not messages that are handled should bubble up the stack.
+     * @param bool $bubble Whether messages that are handled should bubble up the stack.
      *
      * @throws MissingExtensionException If the curl extension is missing
      */
@@ -92,7 +93,7 @@ class PileHandler extends AbstractProcessingHandler
      *
      * @param array $record
      */
-    protected function write(array $record): void
+    protected function write(LogRecord $record): void
     {
         if (empty($record['formatted'])) {
             return;

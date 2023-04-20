@@ -5,7 +5,7 @@ namespace Bloatless\MonoPile\Tests\Unit;
 use Bloatless\MonoPile\PileFormatter;
 use Bloatless\MonoPile\PileHandler;
 use Bloatless\MonoPile\Tests\Fixtures\PileHandlerMock;
-use Monolog\Logger;
+use Monolog\Level;
 use Monolog\Test\TestCase;
 
 class PileHandlerTest extends TestCase
@@ -43,7 +43,7 @@ class PileHandlerTest extends TestCase
     public function testHandleWithBubblingAllowed()
     {
         $handler = new PileHandlerMock($this->apiUrl, $this->apiKey);
-        $record = $this->getRecord(Logger::DEBUG);
+        $record = $this->getRecord(Level::Debug);
         $result = $handler->handle($record);
         $this->assertFalse($result);
 
@@ -58,8 +58,8 @@ class PileHandlerTest extends TestCase
 
     public function testHandleWithBubblingNotAllowed()
     {
-        $handler = new PileHandlerMock($this->apiUrl, $this->apiKey, Logger::DEBUG, false);
-        $record = $this->getRecord(Logger::DEBUG);
+        $handler = new PileHandlerMock($this->apiUrl, $this->apiKey, Level::Debug, false);
+        $record = $this->getRecord(Level::Debug);
         $result = $handler->handle($record);
         $this->assertTrue($result);
     }
@@ -68,7 +68,7 @@ class PileHandlerTest extends TestCase
     {
         $handler = new PileHandlerMock($this->apiUrl, $this->apiKey);
         $handler->setFormatter((new PileFormatter('testsuite')));
-        $record = $this->getRecord(Logger::DEBUG);
+        $record = $this->getRecord(Level::Debug);
         $handler->handle($record);
         $dataSend = $handler->getDataSend();
         $this->assertEquals('testsuite', $dataSend['data']['data']['attributes']['source']);
